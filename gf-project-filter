@@ -1,0 +1,49 @@
+<?php 
+
+
+// Project Inspiration Select Field
+add_filter( 'gform_pre_render_31', 'populate_projects' );
+add_filter( 'gform_pre_validation_31', 'populate_projects' );
+add_filter( 'gform_pre_submission_filter_31', 'populate_projects' );
+add_filter( 'gform_admin_pre_render_31', 'populate_projects' );
+function populate_projects( $form ) {
+
+    foreach ( $form['fields'] as &$field ) {
+
+        if ( $field->type != 'select' || strpos( $field->cssClass, 'populate-projects' ) === false ) {
+            continue;
+        }
+
+				$cur_user_id = get_current_user_id();
+				// Get All Active Projects
+				$args = array(
+					'post_type'              => array( 'leco_client' ),
+					'post_status'            => array( 'publish' ),
+					'order'                  => 'DESC',
+					'orderby'                => 'title',
+
+				);
+
+				// The Query
+				$query = new WP_Query( $args );
+				$projects = array();
+				while ( $query->have_posts() ) {
+				    $query->the_post();
+						$p_id = get_the_id();
+						$title = get_the_title();
+						$userss = get_post_meta($p_id, 'leco_cp_client');
+						if ($userss[0][0] == $cur_user_id) {
+							$projects[] = array('text' => $title, 'value' => $title);
+						}
+
+				}
+
+
+        // update 'Select a Post' to whatever you'd like the instructive option to be
+        $field->placeholder = 'Select a Project';
+        $field->choices = $projects;
+
+    }
+
+    return $form;
+}
